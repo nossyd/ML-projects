@@ -131,3 +131,56 @@ def plot_histogram_kde(df, col, title=None, xlabel=None, ylabel="Frequency",
     
     # Show the plot
     plt.show()
+
+
+def separate(data):
+    """This function will separate the data into numerical and categorical type (object)
+
+    Args:
+        data (pd.DataFrame): Dataframe containing all columns
+
+    Returns:
+        num: numerical type columns
+        cat: categorical type columns
+    """
+    num = data.dtypes != 'object'
+    cat = data.dtypes == 'object'
+
+    num = data[data.columns[num]]
+    cat = data[data.columns[cat]]
+    
+    return num, cat
+
+
+def cat_feat(train, valid, test=None):
+    """This function matches the categorical features in the training, validation, and testing sets simultaneously
+
+    Args:
+        train (pd.DataFrame): Dataframe containing categorical data for training dataset
+        valid (pd.DataFrame): Dataframe containing categorical data for valid dataset
+        test (pd.DataFrame): Dataframe containing categorical data for test dataset
+
+    Returns:
+        train: Dataframe containing categorical data for training dataset
+        valid: Dataframe containing categorical data for valid dataset
+        test: Dataframe containing categorical data for test dataset
+    """
+    # Make sure categorical features in all sets match
+    # Make sure the training, validation, and test features has same number of levels
+    keep = [train.nunique()[i] == valid.nunique()[i] == test.nunique()[i] for i in range(train.shape[1])]
+    train = train[train.columns[keep]]
+    valid = valid[valid.columns[keep]]
+    if test is not None:
+        test = test[test.columns[keep]]
+
+    # Make sure the levels are the same
+    keep = []
+    for i in range(train.shape[1]):
+        keep.append(all(np.sort(train.iloc[:,i].unique()) == np.sort(valid.iloc[:,i].unique())) and all(np.sort(valid.iloc[:,i].unique()) == np.sort(test.iloc[:,i].unique())))
+    train = train[train.columns[keep]]
+    valid = valid[valid.columns[keep]]
+    if test is not None:
+        test = test[test.columns[keep]]
+        return train, valid, test
+    else:
+        return train, valid
